@@ -30,7 +30,7 @@ class DownloadFiles extends Page
         $this->nodeJWTService = $nodeJWTService;
     }
 
-    public function mount(string $path)
+    public function mount(string $path): void
     {
         $this->authorizeAccess();
 
@@ -52,7 +52,7 @@ class DownloadFiles extends Page
 
         $url = $server->node->getConnectionAddress() . '/download/file?token=' . $token->toString();
 
-        return response('', 302, ['Location' => $url]);
+        $this->redirect($url);
     }
 
     protected function authorizeAccess(): void
