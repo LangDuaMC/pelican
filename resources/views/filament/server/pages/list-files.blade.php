@@ -1,4 +1,21 @@
 <x-filament-panels::page>
+    @once
+        <style>
+            .files-selection-merged .fi-ta-header-ctn {
+                position: sticky;
+                top: 0;
+                z-index: 30;
+                background-color: rgba(255, 255, 255, 0.95);
+                -webkit-backdrop-filter: blur(8px);
+                backdrop-filter: blur(8px);
+            }
+
+            .dark .files-selection-merged .fi-ta-header-ctn {
+                background-color: rgba(17, 24, 39, 0.95);
+            }
+        </style>
+    @endonce
+
     <div
         x-data="
         {
@@ -9,11 +26,6 @@
             currentFileIndex: 0,
             totalFiles: 0,
             autoCloseTimer: 1000,
-            bulkMenuOpen: false,
-            selectedRecords: @entangle('selectedTableRecords').live,
-            deselectedRecords: @entangle('deselectedTableRecords').live,
-            isTrackingDeselectedRecords: @entangle('isTrackingDeselectedTableRecords').live,
-            bulkActionsLabel: @js(__('filament-tables::table.actions.open_bulk_actions.label')),
 
             handleDragEnter(e) {
                 e.preventDefault();
@@ -341,76 +353,17 @@
                     this.isUploading = false;
                     this.uploadQueue = [];
                 }
-                if (e.key === 'Escape' && this.bulkMenuOpen) {
-                    this.bulkMenuOpen = false;
-                }
             },
             handleContextMenu(e) {
                 const record = e.target.closest('.fi-ta-record');
                 if (!record || !this.$el.contains(record)) return;
 
                 e.preventDefault();
-                this.bulkMenuOpen = false;
 
                 const trigger = record.querySelector('.fi-dropdown-trigger');
                 if (!trigger) return;
 
                 trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-            },
-            getTableData() {
-                const table = this.$el.querySelector('.fi-ta');
-                if (!table || typeof window.Alpine === 'undefined') return null;
-
-                return window.Alpine.$data(table);
-            },
-            getSelectedCount() {
-                const table = this.getTableData();
-                if (table && typeof table.getSelectedRecordsCount === 'function') {
-                    return table.getSelectedRecordsCount();
-                }
-
-                return this.selectedRecords ? this.selectedRecords.length : 0;
-            },
-            hasSelection() {
-                return this.getSelectedCount() > 0;
-            },
-            selectedLabel() {
-                const count = this.getSelectedCount();
-                if (!count) return this.bulkActionsLabel;
-
-                return `${this.bulkActionsLabel} (${count})`;
-            },
-            canSelectAllRecords() {
-                const table = this.getTableData();
-                if (!table || typeof table.canSelectAllRecords !== 'function') {
-                    return false;
-                }
-
-                return table.canSelectAllRecords();
-            },
-            selectAllRecords() {
-                const table = this.getTableData();
-                if (table && typeof table.selectAllRecords === 'function') {
-                    table.selectAllRecords();
-                }
-
-                this.bulkMenuOpen = false;
-            },
-            deselectAllRecords() {
-                const table = this.getTableData();
-                if (table && typeof table.deselectAllRecords === 'function') {
-                    table.deselectAllRecords();
-                } else if (this.$wire?.deselectAllTableRecords) {
-                    this.$wire.deselectAllTableRecords();
-                }
-
-                this.bulkMenuOpen = false;
-            },
-            runBulkAction(action) {
-                this.bulkMenuOpen = false;
-                if (this.$wire?.mountTableBulkAction) {
-                    this.$wire.mountTableBulkAction(action);
-                }
             },
         }"
         @dragenter.window="handleDragEnter($event)"
@@ -419,7 +372,7 @@
         @drop.window="handleDrop($event)"
         @keydown.window="handleEscapeKey($event)"
         @contextmenu="handleContextMenu($event)"
-        class="relative"
+        class="relative files-selection-merged"
     >
         <div
             x-show="isDragging"
@@ -511,75 +464,6 @@
         </div>
 
         {{ $this->table }}
-
-        <div
-            x-show="hasSelection()"
-            x-cloak
-            class="fixed bottom-6 right-6 z-40"
-        >
-            <div class="relative">
-                <x-filament::button
-                    color="primary"
-                    icon="tabler-list-check"
-                    @click="bulkMenuOpen = ! bulkMenuOpen"
-                >
-                    <span x-text="selectedLabel()"></span>
-                </x-filament::button>
-
-                <div
-                    x-show="bulkMenuOpen"
-                    x-transition:enter="transition ease-out duration-150"
-                    x-transition:enter-start="opacity-0 translate-y-1"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-100"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-1"
-                    @click.outside="bulkMenuOpen = false"
-                    class="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                >
-                    <div class="py-2">
-                        <button
-                            type="button"
-                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
-                            @click="runBulkAction('move')"
-                        >
-                            {{ trans('server/file.actions.move.title') }}
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
-                            @click="runBulkAction('archive')"
-                        >
-                            {{ trans('server/file.actions.archive.title') }}
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full px-4 py-2 text-left text-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-500/10"
-                            @click="runBulkAction('delete')"
-                        >
-                            {{ trans('filament-actions::delete.multiple.label') }}
-                        </button>
-                    </div>
-                    <div class="border-t border-gray-200 py-2 dark:border-gray-700">
-                        <button
-                            type="button"
-                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
-                            x-show="canSelectAllRecords()"
-                            @click="selectAllRecords()"
-                        >
-                            Select all results
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
-                            @click="deselectAllRecords()"
-                        >
-                            {{ trans('filament-tables::table.selection_indicator.actions.deselect_all.label') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <x-filament-actions::modals />
