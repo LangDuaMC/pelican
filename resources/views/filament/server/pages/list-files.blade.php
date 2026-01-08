@@ -4,14 +4,9 @@
             .files-selection-merged .fi-ta-header-ctn {
                 position: sticky;
                 top: 0;
-                z-index: 30;
-                background-color: rgba(255, 255, 255, 0.95);
+                z-index: 1;
                 -webkit-backdrop-filter: blur(8px);
                 backdrop-filter: blur(8px);
-            }
-
-            .dark .files-selection-merged .fi-ta-header-ctn {
-                background-color: rgba(17, 24, 39, 0.95);
             }
         </style>
     @endonce
