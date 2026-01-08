@@ -31,33 +31,39 @@
 @layer components {
   .files-selection-merged {
     --files-table-header-offset: calc(var(--spacing) * 15);
+    --files-table-bg: var(--color-white);
+    --files-table-bg-dark: var(--gray-900);
+    --files-table-border: color-mix(in oklab, var(--gray-200) 70%, transparent);
+    --files-table-border-dark: color-mix(in oklab, var(--gray-700) 45%, transparent);
   }
 
-  .files-selection-merged .fi-ta-ctn-with-header {
-    overflow: visible;
+  .files-selection-merged .fi-ta-ctn {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background-color: var(--files-table-bg);
   }
 
-  .files-selection-merged .fi-ta-content-ctn {
-    overflow: visible !important;
+  .dark .files-selection-merged .fi-ta-ctn {
+    background-color: var(--files-table-bg-dark);
   }
 
   .files-selection-merged .fi-ta-header-ctn {
     position: sticky;
     top: 0;
     z-index: 30;
-    background-color: color-mix(in oklab, var(--color-white) 94%, transparent);
-    backdrop-filter: blur(8px) saturate(140%);
-    border-bottom: 1px solid color-mix(in oklab, var(--gray-200) 60%, transparent);
+    background-color: var(--files-table-bg);
+    border-bottom: 1px solid var(--files-table-border);
     border-top-left-radius: var(--radius-xl);
     border-top-right-radius: var(--radius-xl);
   }
 
   .dark .files-selection-merged .fi-ta-header-ctn {
-    background-color: color-mix(in oklab, var(--gray-900) 92%, transparent);
-    border-bottom-color: color-mix(in oklab, var(--gray-700) 45%, transparent);
+    background-color: var(--files-table-bg-dark);
+    border-bottom-color: var(--files-table-border-dark);
   }
 
   .files-selection-merged .fi-ta-header-toolbar {
+    background-color: inherit;
     border-top-left-radius: var(--radius-xl);
     border-top-right-radius: var(--radius-xl);
   }
@@ -69,21 +75,12 @@
   .files-selection-merged .fi-ta-ctn thead th {
     position: sticky;
     top: var(--files-table-header-offset);
-    z-index: 25;
-    background-color: var(--gray-50);
-    backdrop-filter: blur(6px) saturate(140%);
+    z-index: 20;
+    background-color: var(--files-table-bg);
   }
 
   .dark .files-selection-merged .fi-ta-ctn thead th {
-    background-color: color-mix(in oklab, var(--gray-900) 90%, transparent);
-  }
-
-  .files-selection-merged .fi-ta-ctn thead th:first-child {
-    border-top-left-radius: var(--radius-xl);
-  }
-
-  .files-selection-merged .fi-ta-ctn thead th:last-child {
-    border-top-right-radius: var(--radius-xl);
+    background-color: var(--files-table-bg-dark);
   }
 
   @media (max-width: 39.9375rem) {
