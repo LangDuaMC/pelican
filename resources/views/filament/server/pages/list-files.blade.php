@@ -355,7 +355,7 @@
         @dragover.window="handleDragOver($event)"
         @drop.window="handleDrop($event)"
         @keydown.window="handleEscapeKey($event)"
-        class="relative"
+        class="relative files-selection-merged"
     >
         <div
             x-show="isDragging"
