@@ -2,11 +2,10 @@
 # Stage 0: Base Panel Runtime (FrankenPHP dev, GNU libc)
 # ================================
 #
-# We use the FrankenPHP *development* images (as requested) and a GNU libc base
-# (Debian bookworm) to avoid musl compatibility issues and to match "gnu"
-# expectations.
+# We use the FrankenPHP runtime images (GNU libc / Debian bookworm) to avoid
+# musl compatibility issues and to match "gnu" expectations.
 #
-FROM dunglas/frankenphp-dev:php8.4-bookworm
+FROM dunglas/frankenphp:php8.4-bookworm
 
 # Keep compatible with the legacy Docker builder (no BuildKit required).
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/install-php-extensions

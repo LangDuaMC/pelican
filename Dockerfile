@@ -5,25 +5,17 @@
 #  If you want to build this locally you want to run `docker build -f Dockerfile.dev .`
 ##
 
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 
 # ================================
-# Stage 0: Base Runtime (FrankenPHP dev, GNU libc)
+# Stage 0: Base Runtime
 # ================================
-FROM dunglas/frankenphp:php8.4-bookworm AS base
-
-# Keep compatible with the legacy Docker builder (no BuildKit required).
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/install-php-extensions
-
-RUN chmod +x /usr/local/bin/install-php-extensions \
-    && install-php-extensions bcmath gd intl zip pcntl pdo_mysql pdo_pgsql bz2 \
-    && rm /usr/local/bin/install-php-extensions
+FROM localhost:5000/base-php:${TARGETARCH} AS base
 
 # ================================
 # Stage 1-1: Composer Install
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH base AS composer
+FROM base AS composer
 
 WORKDIR /build
 
@@ -37,7 +29,7 @@ RUN composer install --no-dev --no-interaction --no-autoloader --no-scripts
 # ================================
 # Stage 1-2: Yarn Install
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH node:20-alpine AS yarn
+FROM node:20-alpine AS yarn
 
 WORKDIR /build
 
@@ -50,7 +42,7 @@ RUN yarn config set network-timeout 300000 \
 # ================================
 # Stage 2-1: Composer Optimize
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH composer AS composerbuild
+FROM composer AS composerbuild
 
 # Copy full code to optimize autoload
 COPY --exclude=docker/ . ./
@@ -60,7 +52,7 @@ RUN composer dump-autoload --optimize
 # ================================
 # Stage 2-2: Build Frontend Assets
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH yarn AS yarnbuild
+FROM yarn AS yarnbuild
 
 WORKDIR /build
 
@@ -73,7 +65,7 @@ RUN yarn run build
 # ================================
 # Stage 5: Build Final Application Image
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH base AS final
+FROM base AS final
 
 WORKDIR /var/www/html
 
@@ -126,6 +118,8 @@ EXPOSE 80 443
 VOLUME /pelican-data
 
 USER www-data
+
+ENV YARN_CACHE_FOLDER=/pelican-data/.yarn
 
 ENTRYPOINT [ "/bin/sh", "/entrypoint.sh" ]
 CMD [ "supervisord", "-n", "-c", "/etc/supervisord.conf" ]
