@@ -1,11 +1,15 @@
 # syntax=docker.io/docker/dockerfile:1.13-labs
 # Pelican Development Dockerfile
 
-FROM --platform=$TARGETOS/$TARGETARCH php:8.4-fpm-alpine AS base
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+FROM dunglas/frankenphp-dev:php8.4-bookworm AS base
 
-RUN install-php-extensions bcmath gd intl zip pcntl pdo_mysql pdo_pgsql bz2
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/install-php-extensions
+
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions bcmath gd intl zip pcntl pdo_mysql pdo_pgsql bz2
 
 RUN rm /usr/local/bin/install-php-extensions
 
@@ -62,16 +66,18 @@ RUN yarn run build
 # ================================
 # Stage 5: Build Final Application Image
 # ================================
-FROM --platform=$TARGETOS/$TARGETARCH base AS final
+FROM base AS final
 
 WORKDIR /var/www/html
 
 # Install additional required libraries
-RUN apk add --no-cache \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     # packages for running the panel
-    caddy ca-certificates supervisor supercronic fcgi coreutils \
+    ca-certificates supervisor curl coreutils netcat-openbsd \
     # required for installing plugins. Pulled from https://github.com/pelican-dev/panel/pull/2034
-    zip unzip 7zip bzip2-dev yarn git
+    zip unzip p7zip-full bzip2 git yarnpkg \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy composer binary for runtime plugin dependency management
 COPY --from=composer /usr/local/bin/composer /usr/local/bin/composer
@@ -95,14 +101,12 @@ RUN mkdir -p /pelican-data/storage /pelican-data/plugins /var/run/supervisord \
 # Configure Supervisor
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/Caddyfile /etc/caddy/Caddyfile
-# Add Laravel scheduler to crontab
-COPY docker/crontab /etc/crontabs/crontab
 
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/healthcheck.sh /healthcheck.sh
 
 HEALTHCHECK --interval=5m --timeout=10s --start-period=5s --retries=3 \
-  CMD /bin/ash /healthcheck.sh
+  CMD /bin/sh /healthcheck.sh
 
 EXPOSE 80 443
 
@@ -110,5 +114,5 @@ VOLUME /pelican-data
 
 USER www-data
 
-ENTRYPOINT [ "/bin/ash", "/entrypoint.sh" ]
+ENTRYPOINT [ "/bin/sh", "/entrypoint.sh" ]
 CMD [ "supervisord", "-n", "-c", "/etc/supervisord.conf" ]

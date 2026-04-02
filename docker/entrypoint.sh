@@ -42,12 +42,12 @@ fi
 mkdir -p /pelican-data/database /pelican-data/storage/avatars /pelican-data/storage/fonts /pelican-data/storage/icons /pelican-data/plugins /var/www/html/storage/logs/supervisord 2>/dev/null
 
 # if the app is installed then we need to run migrations on start. New installs will run migrations when you run the installer.
-if [ "${APP_INSTALLED}" = "true" ];  then
+if [ "${APP_INSTALLED:-}" = "true" ] && [ "${SKIP_MIGRATIONS:-}" != "true" ]; then
   #if the db is anything but sqlite wait until it's accepting connections
-  if [ "${DB_CONNECTION}" != "sqlite" ]; then
+  if [ "${DB_CONNECTION:-}" != "sqlite" ]; then
     # check for DB up before starting the panel
     echo "Checking database status."
-    until nc -z -v -w30 $DB_HOST $DB_PORT
+    until nc -z -v -w30 "${DB_HOST:-}" "${DB_PORT:-}"
     do
       echo "Waiting for database connection..."
       # wait for 1 seconds before check again
@@ -80,7 +80,7 @@ if (echo "${APP_URL}" | grep -qE '^https://'); then
 fi
 
 # when running behind a proxy
-if [ "${BEHIND_PROXY}" = "true" ]; then
+if [ "${BEHIND_PROXY:-}" = "true" ]; then
   echo "running behind proxy"
   echo "listening on port 80 internally"
   export CADDY_LE_EMAIL=""
@@ -91,16 +91,15 @@ fi
 
 # disable caddy if SKIP_CADDY is set
 if [ "${SKIP_CADDY:-}" = "true" ]; then
-  echo "Starting PHP-FPM only"
+  echo "Starting app services without web server"
 else
-  echo "Starting PHP-FPM and Caddy"
+  echo "Starting app services"
   # enable caddy
   export SUPERVISORD_CADDY=true
 
   # handle trusted proxies for caddy when variable has data
   if [ -n "${TRUSTED_PROXIES:-}" ]; then
-    FORMATTED_PROXIES=$(echo "trusted_proxies static ${TRUSTED_PROXIES}" | sed 's/,/ /g')
-    export CADDY_TRUSTED_PROXIES="${FORMATTED_PROXIES}"
+    export CADDY_TRUSTED_PROXIES=$(echo "trusted_proxies static ${TRUSTED_PROXIES}" | sed 's/,/ /g')
     export CADDY_STRICT_PROXIES="trusted_proxies_strict"
   fi
 fi
