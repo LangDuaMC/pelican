@@ -27,3 +27,65 @@
 @source '../../vendor/gboquizosanchez/filament-log-viewer/resources/views/**/*.blade.php';
 
 @variant dark (&:where(.dark, .dark *));
+
+@layer components {
+  .files-selection-merged {
+    --files-table-header-offset: calc(var(--spacing) * 15);
+    --files-table-bg: var(--color-white);
+    --files-table-bg-dark: var(--gray-900);
+    --files-table-border: color-mix(in oklab, var(--gray-200) 70%, transparent);
+    --files-table-border-dark: color-mix(in oklab, var(--gray-700) 45%, transparent);
+  }
+
+  .files-selection-merged .fi-ta-ctn {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background-color: var(--files-table-bg);
+  }
+
+  .dark .files-selection-merged .fi-ta-ctn {
+    background-color: var(--files-table-bg-dark);
+  }
+
+  .files-selection-merged .fi-ta-header-ctn {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background-color: var(--files-table-bg);
+    border-bottom: 1px solid var(--files-table-border);
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+  }
+
+  .dark .files-selection-merged .fi-ta-header-ctn {
+    background-color: var(--files-table-bg-dark);
+    border-bottom-color: var(--files-table-border-dark);
+  }
+
+  .files-selection-merged .fi-ta-header-toolbar {
+    background-color: inherit;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+  }
+
+  .files-selection-merged .fi-ta-selection-indicator {
+    display: none;
+  }
+
+  .files-selection-merged .fi-ta-ctn thead th {
+    position: sticky;
+    top: var(--files-table-header-offset);
+    z-index: 20;
+    background-color: var(--files-table-bg);
+  }
+
+  .dark .files-selection-merged .fi-ta-ctn thead th {
+    background-color: var(--files-table-bg-dark);
+  }
+
+  @media (max-width: 39.9375rem) {
+    .files-selection-merged {
+      --files-table-header-offset: calc(var(--spacing) * 24);
+    }
+  }
+}
