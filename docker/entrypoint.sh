@@ -66,6 +66,9 @@ fi
 echo "Optimizing Filament"
 php artisan filament:optimize
 
+echo "Optimizing Laravel"
+php artisan optimize
+
 # default to caddy not starting
 export SUPERVISORD_CADDY=false
 export CADDY_APP_URL="${APP_URL}"
